@@ -1,49 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vision Infinite - AI Visual Assistant</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        // --- LOGIC STARTS HERE ---
+        let currentBase64 = null;
+        let selectedTone = 'simple';
+
+        // 1. Camera & Upload Elements ko pakadna
+        const imageInput = document.createElement('input'); 
+        imageInput.type = 'file'; 
+        imageInput.accept = 'image/*';
+
+        // Bind Buttons (Design ke buttons ko ID de di hai)
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadBtn = document.querySelectorAll('button')[1]; // Upload Image
+            const snapBtn = document.querySelectorAll('button')[2];   // Snap Camera
+            const previewArea = document.querySelector('.aspect-video');
+            const statusIndicator = document.getElementById('status-indicator');
+
+            // Image Selection Logic
+            uploadBtn.onclick = () => imageInput.click();
+            
+            imageInput.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = () => {
+                    currentBase64 = reader.result.split(',')[1];
+                    // Preview update
+                    previewArea.innerHTML = `<img src="${reader.result}" class="w-full h-full object-cover rounded-3xl">`;
+                    // Tone automatic start
+                    analyzeImage(selectedTone);
+                };
+                reader.readAsDataURL(file);
+            };
+
+            // Tone Selection Logic
+            window.setTone = (tone, btn) => {
+                selectedTone = tone;
+                // UI update: Saare buttons ko normal karo
+                document.querySelectorAll('.tone-card').forEach(c => {
+                    c.classList.replace('border-primary', 'border-transparent');
+                });
+                // Is button ko blue highlight karo
+                btn.classList.replace('border-transparent', 'border-primary');
+                
+                if(currentBase64) analyzeImage(tone);
+            };
+        });
+
+        async function analyzeImage(tone) {
+            const statusText = document.querySelector('.text-primary.font-bold');
+            const scanLine = document.querySelector('.scan-line');
+            
+            statusText.innerText = "Gemini Analyzing...";
+            scanLine.style.display = 'block';
+
+            try {
+                // Tumhara Backend URL yahan aayega
+                const response = await fetch('http://localhost:3000/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentBase64, tone: tone })
+                });
+
+                const data = await response.json();
+                
+                // Result Display
+                showOutput(data.text);
+            } catch (err) {
+                console.error(err);
+                alert("Backend connect nahi ho raha! Check server.js");
+            } finally {
+                statusText.innerText = "Analysis Complete";
+                scanLine.style.display = 'none';
+            }
+        }
+
+        function showOutput(text) {
+            // Screen reader supportive text-to-speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+
+            // Dynamically add a result card if not present
+            let resultDiv = document.getElementById('ai-result');
+            if(!resultDiv) {
+                resultDiv = document.createElement('div');
+                resultDiv.id = 'ai-result';
+                resultDiv.className = "p-5 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-800 mt-4 animate-pulse";
+                document.querySelector('main').prepend(resultDiv);
+            }
+            resultDiv.innerHTML = `<p class="text-sm font-medium text-slate-800 dark:text-slate-200">${text}</p>`;
+            resultDiv.classList.remove('animate-pulse');
+        }
+    </script>
 </head>
-<body class="p-4 max-w-md mx-auto bg-slate-50">
-    <header class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 p-2 rounded-full text-white">👁️</div>
-            <h1 class="font-bold text-lg">Vision Infinite</h1>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <main class="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
+        <div class="grid grid-cols-2 gap-4">
+            </div>
+
+        <div class="space-y-3">
+            <button onclick="setTone('simple', this)" class="tone-card relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-primary shadow-premium transition-all text-left">
+                <span class="text-4xl">👶</span>
+                <div class="flex-1">
+                    <span class="text-base font-bold text-slate-900 dark:text-white block">Simple</span>
+                    <p class="text-xs text-gray-500">Concise descriptions.</p>
+                </div>
+            </button>
+            
+            <button onclick="setTone('detailed', this)" class="tone-card relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-transparent hover:border-slate-200 shadow-sm transition-all text-left">
+                <span class="text-4xl">📊</span>
+                <div class="flex-1">
+                    <span class="text-base font-bold text-slate-900 dark:text-white block">Detailed</span>
+                    <p class="text-xs text-gray-500">Deep visual analysis.</p>
+                </div>
+            </button>
         </div>
-        <button class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase">Accessibility</button>
-    </header>
+    </main>
 
-    <div class="grid grid-cols-2 gap-4 mb-6">
-        <label class="btn-upload">
-            <span>🖼️ Upload Image</span>
-            <input type="file" id="imageInput" class="hidden" accept="image/*">
-        </label>
-        <button id="snapBtn" class="btn-snap">📸 Snap Camera</button>
-    </div>
-
-    <div class="preview-box" id="previewContainer">
-        <div class="scan-line"></div>
-        <img id="displayImg" class="hidden w-full h-full object-cover">
-        <p id="waitText" class="text-gray-400">Waiting for input...</p>
-    </div>
-
-    <div class="tones-container">
-        <p class="section-title">Description Tone</p>
-        <button onclick="analyze('simple')" class="tone-card active">
-            <span>👶</span> <div><b>Simple</b><p>Easy words</p></div> 🔊
-        </button>
-        <button onclick="analyze('detailed')" class="tone-card">
-            <span>📊</span> <div><b>Detailed</b><p>Deep analysis</p></div> 🔊
-        </button>
-    </div>
-
-    <div id="outputCard" class="hidden result-card">
-        <p id="responseText"></p>
-    </div>
-
-    <script src="app.js"></script>
-</body>
+    </body>
 </html>
