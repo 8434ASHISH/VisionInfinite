@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Infinite - AI Visual Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-4 max-w-md mx-auto bg-slate-50">
+    <header class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-2 rounded-full text-white">👁️</div>
+            <h1 class="font-bold text-lg">Vision Infinite</h1>
+        </div>
+        <button class="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase">Accessibility</button>
+    </header>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <label class="btn-upload">
+            <span>🖼️ Upload Image</span>
+            <input type="file" id="imageInput" class="hidden" accept="image/*">
+        </label>
+        <button id="snapBtn" class="btn-snap">📸 Snap Camera</button>
+    </div>
+
+    <div class="preview-box" id="previewContainer">
+        <div class="scan-line"></div>
+        <img id="displayImg" class="hidden w-full h-full object-cover">
+        <p id="waitText" class="text-gray-400">Waiting for input...</p>
+    </div>
+
+    <div class="tones-container">
+        <p class="section-title">Description Tone</p>
+        <button onclick="analyze('simple')" class="tone-card active">
+            <span>👶</span> <div><b>Simple</b><p>Easy words</p></div> 🔊
+        </button>
+        <button onclick="analyze('detailed')" class="tone-card">
+            <span>📊</span> <div><b>Detailed</b><p>Deep analysis</p></div> 🔊
+        </button>
+    </div>
+
+    <div id="outputCard" class="hidden result-card">
+        <p id="responseText"></p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
