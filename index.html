@@ -1,124 +1,183 @@
 <!DOCTYPE html>
 <html class="light" lang="en">
 <head>
-    <script type="module">
-        // --- LOGIC STARTS HERE ---
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Vision Infinite Accessible Full Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1a73e8",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: { "display": ["Lexend", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1.25rem", "2xl": "1.5rem", "3xl": "2rem", "full": "9999px" },
+                    boxShadow: { 'premium': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03)', 'elevation': '0 10px 40px -10px rgba(26, 115, 232, 0.15)' },
+                    keyframes: { scan: { '0%, 100%': { transform: 'translateY(0%)' }, '50%': { transform: 'translateY(180px)' } } },
+                    animation: { 'scan-line': 'scan 3s ease-in-out infinite' }
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: 'Lexend', sans-serif; background-color: #f8fafc; }
+        .scan-line { height: 3px; background: linear-gradient(90deg, transparent, #1a73e8, #60a5fa, #1a73e8, transparent); box-shadow: 0 0 15px #1a73e8; width: 100%; position: absolute; top: 0; left: 0; z-index: 20; display: none; }
+        .scanning .scan-line { display: block; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div class="relative flex min-h-screen w-full max-w-[480px] mx-auto flex-col bg-slate-50 dark:bg-slate-950 shadow-2xl">
+        
+        <header class="flex items-center bg-white/90 dark:bg-slate-900/90 sticky top-0 z-30 px-6 py-4 justify-between border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20"><span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1">visibility</span></div>
+                <h1 class="text-slate-900 dark:text-white text-lg font-bold tracking-tight">Vision Infinite</h1>
+            </div>
+            <button onclick="toggleTheme()" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-white shadow-elevation active:scale-95 transition-all">
+                <span class="text-base">🌓</span>
+                <span class="text-xs font-bold uppercase tracking-wide">Accessibility</span>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="document.getElementById('hiddenInput').click()" class="group flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-primary/50 transition-all">
+                    <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl group-hover:scale-110 transition-transform"><span>🖼️</span></div>
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Upload Image</span>
+                    <input type="file" id="hiddenInput" class="hidden" accept="image/*" onchange="handleFile(this)">
+                </button>
+                <button class="group flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-primary shadow-xl shadow-primary/20 active:scale-95 transition-all">
+                    <div class="p-3 bg-white/20 rounded-2xl group-hover:scale-110 transition-transform"><span>📸</span></div>
+                    <span class="text-sm font-bold text-white">Snap Camera</span>
+                </button>
+            </div>
+
+            <section class="space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Active AI Processing</h3>
+                    <div id="loading-badge" class="hidden items-center gap-2">
+                        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span></span>
+                        <span class="text-[10px] text-primary font-bold">Scanning...</span>
+                    </div>
+                </div>
+                <div id="preview-container" class="aspect-video w-full rounded-3xl border-2 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden shadow-premium">
+                    <div class="scan-line animate-scan-line"></div>
+                    <div id="preview-content" class="flex flex-col items-center">
+                        <span class="material-symbols-outlined text-slate-400 dark:text-slate-700 text-6xl mb-3">image</span>
+                        <p class="text-xs text-slate-500 font-semibold">Waiting for capture</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <div class="px-1"><h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Description Tone</h3></div>
+                <div class="space-y-3" id="tone-options">
+                    <button onclick="selectTone('simple', this)" class="tone-btn relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-primary shadow-premium transition-all text-left">
+                        <span class="text-4xl">👶</span>
+                        <div class="flex-1"><span class="text-base font-bold text-slate-900 dark:text-white block">Simple</span><p class="text-xs text-slate-500 leading-tight">Concise descriptions using easy words.</p></div>
+                        <span class="material-symbols-outlined text-primary text-2xl">volume_up</span>
+                    </button>
+                    <button onclick="selectTone('detailed', this)" class="tone-btn relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-transparent hover:border-slate-200 shadow-sm transition-all text-left">
+                        <span class="text-4xl">📊</span>
+                        <div class="flex-1"><span class="text-base font-bold text-slate-900 dark:text-white block">Detailed</span><p class="text-xs text-slate-500 leading-tight">Deep visual analysis with spatial info.</p></div>
+                        <span class="material-symbols-outlined text-slate-300 text-2xl">volume_up</span>
+                    </button>
+                </div>
+            </section>
+
+            <div id="result-card" class="hidden p-5 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-800 transition-all">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[10px] font-black uppercase text-blue-500">AI Insight</span>
+                    <button onclick="repeatVoice()" class="material-symbols-outlined text-blue-500 text-sm">replay</button>
+                </div>
+                <p id="ai-text" class="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed"></p>
+            </div>
+        </main>
+    </div>
+
+    <script>
         let currentBase64 = null;
         let selectedTone = 'simple';
+        let lastResponse = "";
 
-        // 1. Camera & Upload Elements ko pakadna
-        const imageInput = document.createElement('input'); 
-        imageInput.type = 'file'; 
-        imageInput.accept = 'image/*';
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
 
-        // Bind Buttons (Design ke buttons ko ID de di hai)
-        document.addEventListener('DOMContentLoaded', () => {
-            const uploadBtn = document.querySelectorAll('button')[1]; // Upload Image
-            const snapBtn = document.querySelectorAll('button')[2];   // Snap Camera
-            const previewArea = document.querySelector('.aspect-video');
-            const statusIndicator = document.getElementById('status-indicator');
-
-            // Image Selection Logic
-            uploadBtn.onclick = () => imageInput.click();
-            
-            imageInput.onchange = (e) => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = () => {
-                    currentBase64 = reader.result.split(',')[1];
-                    // Preview update
-                    previewArea.innerHTML = `<img src="${reader.result}" class="w-full h-full object-cover rounded-3xl">`;
-                    // Tone automatic start
-                    analyzeImage(selectedTone);
-                };
-                reader.readAsDataURL(file);
+        function handleFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentBase64 = e.target.result.split(',')[1];
+                document.getElementById('preview-content').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-2xl">`;
+                startAnalysis();
             };
+            reader.readAsDataURL(file);
+        }
 
-            // Tone Selection Logic
-            window.setTone = (tone, btn) => {
-                selectedTone = tone;
-                // UI update: Saare buttons ko normal karo
-                document.querySelectorAll('.tone-card').forEach(c => {
-                    c.classList.replace('border-primary', 'border-transparent');
-                });
-                // Is button ko blue highlight karo
-                btn.classList.replace('border-transparent', 'border-primary');
-                
-                if(currentBase64) analyzeImage(tone);
-            };
-        });
+        function selectTone(tone, btn) {
+            selectedTone = tone;
+            document.querySelectorAll('.tone-btn').forEach(b => {
+                b.classList.replace('border-primary', 'border-transparent');
+                b.querySelector('.material-symbols-outlined').classList.replace('text-primary', 'text-slate-300');
+            });
+            btn.classList.replace('border-transparent', 'border-primary');
+            btn.querySelector('.material-symbols-outlined').classList.replace('text-slate-300', 'text-primary');
+            if (currentBase64) startAnalysis();
+        }
 
-        async function analyzeImage(tone) {
-            const statusText = document.querySelector('.text-primary.font-bold');
-            const scanLine = document.querySelector('.scan-line');
-            
-            statusText.innerText = "Gemini Analyzing...";
-            scanLine.style.display = 'block';
+        async function startAnalysis() {
+            const container = document.getElementById('preview-container');
+            const badge = document.getElementById('loading-badge');
+            container.classList.add('scanning');
+            badge.classList.remove('hidden');
+            badge.classList.add('flex');
 
             try {
-                // Tumhara Backend URL yahan aayega
+                // LOCALHOST PAR SERVER CHALANA ZAROORI HAI (server.js)
                 const response = await fetch('http://localhost:3000/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: currentBase64, tone: tone })
+                    body: JSON.stringify({ image: currentBase64, tone: selectedTone })
                 });
-
                 const data = await response.json();
-                
-                // Result Display
-                showOutput(data.text);
+                lastResponse = data.text;
+                displayResult(data.text);
             } catch (err) {
                 console.error(err);
-                alert("Backend connect nahi ho raha! Check server.js");
+                displayResult("Error: Backend server not running. Start server.js first.");
             } finally {
-                statusText.innerText = "Analysis Complete";
-                scanLine.style.display = 'none';
+                container.classList.remove('scanning');
+                badge.classList.add('hidden');
             }
         }
 
-        function showOutput(text) {
-            // Screen reader supportive text-to-speech
+        function displayResult(text) {
+            const card = document.getElementById('result-card');
+            const p = document.getElementById('ai-text');
+            card.classList.remove('hidden');
+            p.innerText = text;
+            speak(text);
+        }
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 1.0;
             window.speechSynthesis.speak(utterance);
+        }
 
-            // Dynamically add a result card if not present
-            let resultDiv = document.getElementById('ai-result');
-            if(!resultDiv) {
-                resultDiv = document.createElement('div');
-                resultDiv.id = 'ai-result';
-                resultDiv.className = "p-5 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-800 mt-4 animate-pulse";
-                document.querySelector('main').prepend(resultDiv);
-            }
-            resultDiv.innerHTML = `<p class="text-sm font-medium text-slate-800 dark:text-slate-200">${text}</p>`;
-            resultDiv.classList.remove('animate-pulse');
+        function repeatVoice() {
+            if (lastResponse) speak(lastResponse);
         }
     </script>
-</head>
-
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
-    <main class="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
-        <div class="grid grid-cols-2 gap-4">
-            </div>
-
-        <div class="space-y-3">
-            <button onclick="setTone('simple', this)" class="tone-card relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-primary shadow-premium transition-all text-left">
-                <span class="text-4xl">👶</span>
-                <div class="flex-1">
-                    <span class="text-base font-bold text-slate-900 dark:text-white block">Simple</span>
-                    <p class="text-xs text-gray-500">Concise descriptions.</p>
-                </div>
-            </button>
-            
-            <button onclick="setTone('detailed', this)" class="tone-card relative w-full flex items-center gap-5 p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-transparent hover:border-slate-200 shadow-sm transition-all text-left">
-                <span class="text-4xl">📊</span>
-                <div class="flex-1">
-                    <span class="text-base font-bold text-slate-900 dark:text-white block">Detailed</span>
-                    <p class="text-xs text-gray-500">Deep visual analysis.</p>
-                </div>
-            </button>
-        </div>
-    </main>
-
-    </body>
+</body>
 </html>
